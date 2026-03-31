@@ -54,17 +54,28 @@
   amazon.aws.ec2_vpc_nat_gateway:
     nat_gateway_id: "{{ nat_info.result[0].nat_gateway_id }}"
     state: absent
+    wait: true
   when: nat_info.result | length > 0
 
 ##########################################
 # Release Elastic IP
 ##########################################
+- name: Get Elastic IP info
+  amazon.aws.ec2_eip_info:
+    filters:
+      "tag:Name": "{{ project_name }}-{{ env }}-nat-eip"
+      "tag:Environment": "{{ env }}"
+  register: eip_info
+
 - name: Release Elastic IP
-  amazon.aws.ec2_eip:
-    state: absent
-    tags:
-      Name: "{{ project_name }}-{{ env }}-nat-eip"
-      Environment: "{{ env }}"
+  command: >
+    aws ec2 release-address --allocation-id {{ eip_info.addresses[0].allocation_id }} --region {{ region }}
+  when: eip_info.addresses | length > 0
+  register: release_result
+  retries: 5
+  delay: 3
+  until: release_result.rc == 0
+
 
 ##########################################
 # Internet Gateway
@@ -92,6 +103,7 @@
     vpc_id: "{{ vpc_id }}"
     cidr: "{{ item.cidr_block }}"
     state: absent
+    wait: true
   loop: "{{ subnet_info.subnets }}"
   when: subnet_info.subnets | length > 0
 

@@ -5,6 +5,7 @@
     - eks
   vars:
     task_state: absent
+  environment: "{{ environment_vars }}"
 
 - name: Delete VPC Stack
   hosts: local
@@ -13,3 +14,4 @@
     - vpc
   vars:
     task_state: absent
+  environment: "{{ environment_vars }}"

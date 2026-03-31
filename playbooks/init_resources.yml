@@ -5,6 +5,7 @@
     - vpc
   vars:
     task_state: present
+  environment: "{{ environment_vars }}"
 
 - name: Provision EKS stack
   hosts: local
@@ -13,3 +14,4 @@
     - eks
   vars:
     task_state: present
+  environment: "{{ environment_vars }}"
