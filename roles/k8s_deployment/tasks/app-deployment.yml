@@ -1,0 +1,15 @@
+##########################################
+# Install application
+##########################################
+- name: Update helm dependencies
+  command: >
+    helm dependency update {{ helm_path }} --skip-refresh
+
+- name: Install helm
+  command: >
+    helm upgrade --install {{ helm_name }} {{ helm_path }} --namespace {{ app_ns }} --create-namespace
+
+- name: Wait for pods to be ready
+  command: kubectl rollout status deployment/{{ helm_name }} --namespace {{ app_ns }}
+  register: rollout_status
+  changed_when: false

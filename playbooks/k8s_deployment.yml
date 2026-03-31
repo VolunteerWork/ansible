@@ -1,0 +1,5 @@
+- name: Deploy Kubernetes resources and applications
+  hosts: local
+  gather_facts: true
+  roles:
+    - k8s_deployment

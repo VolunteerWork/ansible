@@ -1,0 +1,87 @@
+# =========================
+# kubectl
+# =========================
+- name: Check current user
+  command: whoami
+  register: current_user
+  changed_when: false
+
+- name: Show current user
+  debug:
+    msg: "Ansible is running as: {{ current_user.stdout }}"
+
+- name: Check if kubectl exists
+  command: kubectl version --client
+  register: kubectl_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install kubectl
+  become: true
+  when: kubectl_check.rc != 0
+  block:
+    - name: Download kubectl
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+# =========================
+# Helm
+# =========================
+- name: Check if helm exists
+  command: helm version
+  register: helm_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install Helm
+  become: true
+  when: helm_check.rc != 0
+  block:
+
+    - name: Download Helm tar
+      get_url:
+        url: "https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz"
+        dest: "/tmp/helm-{{ helm_version }}.tar.gz"
+        mode: '0644'
+
+    - name: Extract Helm
+      unarchive:
+        src: "/tmp/helm-{{ helm_version }}.tar.gz"
+        dest: /tmp/
+        remote_src: yes
+        creates: /tmp/linux-amd64/helm
+
+    - name: Install Helm binary
+      command: mv /tmp/linux-amd64/helm /usr/local/bin/helm
+      args:
+        creates: /usr/local/bin/helm
+
+    - name: Clean up Helm files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/helm-{{ helm_version }}.tar.gz"
+        - "/tmp/linux-amd64"
+
+# =========================
+# AWS CLI (via pip)
+# =========================
+- name: Check if aws cli exists
+  command: aws --version
+  register: aws_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Ensure pip is installed
+  apt:
+    name: python3-pip
+    state: present
+  when: aws_check.rc != 0
+
+- name: Install AWS CLI via pip
+  pip:
+    name: awscli
+  when: aws_check.rc != 0

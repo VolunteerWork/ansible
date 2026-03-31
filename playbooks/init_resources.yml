@@ -1,0 +1,15 @@
+- name: Provision VPC and subnets
+  hosts: local
+  gather_facts: false
+  roles:
+    - vpc
+  vars:
+    task_state: present
+
+- name: Provision EKS stack
+  hosts: local
+  gather_facts: false
+  roles:
+    - eks
+  vars:
+    task_state: present

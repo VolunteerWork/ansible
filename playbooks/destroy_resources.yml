@@ -1,0 +1,15 @@
+- name: Delete EKS Stack
+  hosts: local
+  gather_facts: false
+  roles:
+    - eks
+  vars:
+    task_state: absent
+
+- name: Delete VPC Stack
+  hosts: local
+  gather_facts: false
+  roles:
+    - vpc
+  vars:
+    task_state: absent

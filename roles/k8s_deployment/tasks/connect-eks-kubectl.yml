@@ -1,0 +1,25 @@
+---
+# tasks/connect_eks_kubectl.yml
+
+- name: Ensure kubeconfig directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+    mode: '0755'
+
+- name: Update kubeconfig for EKS cluster
+  command: >
+    /mnt/d/Volunteerwork/venv/bin/aws eks update-kubeconfig
+    --name {{ eks_cluster_name }}
+    --region {{ region }}
+  register: kubeconfig_result
+  changed_when: "'added new context' in kubeconfig_result.stdout"
+
+- name: Verify kubectl connection to cluster
+  command: kubectl get nodes
+  register: kubectl_nodes
+  changed_when: false
+
+- name: Show cluster nodes
+  debug:
+    var: kubectl_nodes.stdout_lines

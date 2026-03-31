@@ -1,0 +1,7 @@
+- name: Create VPC Stack
+  include_tasks: create.yml
+  when: task_state == 'present'
+
+- name: Destroy VPC Stack
+  include_tasks: destroy.yml
+  when: task_state == 'absent'

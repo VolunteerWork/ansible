@@ -1,0 +1,70 @@
+image:
+  repository: hungtran679/volunteerwork-backend
+  imageTag: latest
+  pullPolicy: Always
+
+serviceAccount:
+  create: true
+
+pvc:
+  enabled: false
+
+app:
+  replicaCount: 1
+
+  podLabels: {}
+  podAnnotations: {}
+  
+  env: 
+    - name: DB_HOST
+      value: "mongodb.db.svc.cluster.local"
+    - name: DB_PORT
+      value: "27017"
+    - name: DB_NAME
+      value: "volunteerwork"
+    - name: DB_USER
+      value: "admin"
+    - name: DB_PASSWORD
+      value: "Kobiet.123"
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  livenessProbe:
+    tcpSocket:
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    tcpSocket:
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+rollout:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - paths:
+        - path: "/api"
+          pathType: ImplementationSpecific
+  tls: []
+
+autoscaling:
+  enabled: false

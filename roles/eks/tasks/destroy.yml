@@ -1,0 +1,63 @@
+---
+##########################################
+# Gather existing resources
+##########################################
+- name: Get VPC info
+  amazon.aws.ec2_vpc_net_info:
+    filters:
+      "tag:Name": "{{ project_name }}-{{ env }}-vpc"
+      "tag:Environment": "{{ env }}"
+  register: vpc_info
+
+- name: Validate VPC
+  assert:
+    that:
+      - vpc_info.vpcs | length == 1
+    fail_msg: "Expected exactly 1 VPC, found {{ vpc_info.vpcs | length }}"
+
+- name: Set VPC ID
+  set_fact:
+    vpc_id: "{{ vpc_info.vpcs[0].id }}"
+
+##########################################
+# Delete Node Group (FIRST)
+##########################################
+- name: Delete node group
+  community.aws.eks_nodegroup:
+    name: "{{ project_name }}-{{ env }}-eks-node-group"
+    cluster_name: "{{ project_name }}-{{ env }}-eks-cluster"
+    region: "{{ region }}"
+    state: absent
+    wait: true
+
+##########################################
+# Delete EKS Cluster
+##########################################
+- name: Delete EKS cluster
+  community.aws.eks_cluster:
+    name: "{{ project_name }}-{{ env }}-eks-cluster"
+    region: "{{ region }}"
+    state: absent
+    wait: true
+
+##########################################
+# Delete Security Group
+##########################################
+- name: Delete security group
+  amazon.aws.ec2_group:
+    name: "{{ project_name }}-{{ env }}-eks-sg"
+    region: "{{ region }}"
+    state: absent
+
+##########################################
+# Delete IAM Roles
+##########################################
+- name: Delete EKS node role
+  amazon.aws.iam_role:
+    name: "{{ project_name }}-{{ env }}-eks-node-role"
+    state: absent
+
+- name: Delete EKS cluster role
+  amazon.aws.iam_role:
+    name: "{{ project_name }}-{{ env }}-eks-cluster-role"
+    state: absent

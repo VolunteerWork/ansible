@@ -1,0 +1,7 @@
+- name: Create EKS Stack
+  include_tasks: create.yml
+  when: task_state == 'present'
+
+- name: Destroy EKS Stack
+  include_tasks: destroy.yml
+  when: task_state == 'absent'

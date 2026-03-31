@@ -1,0 +1,25 @@
+--- 
+# tasks/main.yml
+
+# - name: Install CLI tools
+#   import_tasks: cli-installation.yml
+
+# - name: Connect kubectl to EKS cluster
+#   import_tasks: connect-eks-kubectl.yml
+
+# - name: Install EKS add-ons and OSS components
+#   import_tasks: oss-installation.yml
+
+- name: Deploy backend in EKS cluster
+  import_tasks: app-deployment.yml
+  vars:
+    helm_name: "backend"
+    helm_path: "{{ role_path }}/../../helm_charts/backend"
+    app_ns: "app"
+
+- name: Deploy frontend in EKS cluster
+  import_tasks: app-deployment.yml
+  vars:
+    helm_name: "frontend"
+    helm_path: "{{ role_path }}/../../helm_charts/frontend"
+    app_ns: "app"
