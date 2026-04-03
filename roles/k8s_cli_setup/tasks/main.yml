@@ -7,8 +7,11 @@
 # - name: Connect kubectl to EKS cluster
 #   import_tasks: connect-eks-kubectl.yml
 
-# - name: Install EKS add-ons and OSS components
-#   import_tasks: oss-installation.yml
+# - name: Install EKS add-ons
+#   import_tasks: install-aws-addson.yml
+
+- name: Install OSS helm charts
+  import_tasks: oss-helms-deployment.yml
 
 - name: Deploy backend in EKS cluster
   import_tasks: app-deployment.yml

@@ -1,0 +1,7 @@
+- name: Install EKS addons
+  amazon.aws.eks_addon:
+    cluster_name: "{{ eks_cluster_name }}"
+    addon_name: "{{ item }}"
+    region: "{{ region }}"
+    state: present
+  loop: "{{ eks_addons }}"

@@ -1,0 +1,7 @@
+# Istio config
+istio_namespace: istio-system
+istio_repo_url: https://istio-release.storage.googleapis.com/charts
+istio_version: 1.29.1
+istio_sidecar_injection_namespaces:
+  - app
+  - db

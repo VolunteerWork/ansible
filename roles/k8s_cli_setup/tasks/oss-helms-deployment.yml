@@ -1,0 +1,71 @@
+# =========================
+# INSTALL ISTIO
+# =========================
+- name: Add Istio Helm repository
+  kubernetes.core.helm_repository:
+    name: istio
+    repo_url: "{{ istio_repo_url }}"
+
+- name: Create Istio namespace
+  kubernetes.core.k8s:
+    name: "{{ istio_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Install Istio Base (CRDs)
+  kubernetes.core.helm:
+    name: istio-base
+    chart_ref: istio/base
+    release_namespace: "{{ istio_namespace }}"
+    chart_version: "{{ istio_version }}"
+    wait: true
+    values_files:
+          - "{{ role_path }}/../helm_charts/istio/base/values.custom.yaml"
+
+- name: Install Istiod (Control Plane)
+  kubernetes.core.helm:
+    name: istiod
+    chart_ref: istio/discovery
+    release_namespace: "{{ istio_namespace }}"
+    chart_version: "{{ istio_version }}"
+    wait: true
+    values_files:
+          - "{{ role_path }}/../helm_charts/istio/istiod/values.custom.yaml"
+
+- name: Install Istio Gateway
+  kubernetes.core.helm:
+    name: istio-ingressgateway
+    chart_ref: istio/gateway
+    release_namespace: "{{ istio_namespace }}"
+    chart_version: "{{ istio_version }}"
+    wait: true
+    values_files:
+          - "{{ role_path }}/../helm_charts/istio/gateway/values.custom.yaml"
+
+- name: Enable istio sidecar for namespaces
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ item }}"
+        labels:
+          istio-injection: enabled
+    state: present
+  loop: "{{ istio_sidecar_injection_namespaces }}"
+
+# =========================
+# INSTALL MONGODB
+# =========================
+- name: Install MongoDB via Helm
+  command: >
+    helm install --install mongodb {{ role_path }}/../helm_charts/mongodb
+    --namespace db
+    --create-namespace
+  register: helm_install_result
+
+- name: Wait for MongoDB pods to be ready
+  command: kubectl rollout status deployment/mongodb -n db
+  register: rollout_status
+  changed_when: false

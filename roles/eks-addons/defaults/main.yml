@@ -1,0 +1,8 @@
+region: us-east-1
+eks_cluster_name: "{{ project_name }}-{{ env }}-eks-cluster"
+
+eks-addons:
+  vpc_cni: true
+  coredns: true
+  kube_proxy: true
+  aws_ebs_csi_driver: true

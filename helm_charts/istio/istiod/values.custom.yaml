@@ -1,0 +1,7 @@
+_internal_defaults_do_not_set:
+  autoscaleEnabled: false
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1048Mi

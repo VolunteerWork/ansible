@@ -1,0 +1,81 @@
+# =========================
+# INSTALL ISTIO
+# =========================
+- name: Add Istio Helm repository
+  kubernetes.core.helm_repository:
+    name: istio
+    repo_url: "{{ istio_repo_url }}"
+
+- name: Create Istio namespace
+  kubernetes.core.k8s:
+    name: "{{ istio_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Install Istio Base (CRDs)
+  kubernetes.core.helm:
+    name: istio-base
+    chart_ref: istio/base
+    release_namespace: "{{ istio_namespace }}"
+    chart_version: "{{ istio_version }}"
+    state: present
+    wait: true
+    values_files:
+          - "{{ role_path }}/../helm_charts/istio/base/values.custom.yaml"
+
+- name: Install Istiod (Control Plane)
+  kubernetes.core.helm:
+    name: istiod
+    chart_ref: istio/discovery
+    release_namespace: "{{ istio_namespace }}"
+    chart_version: "{{ istio_version }}"
+    state: present
+    wait: true
+    values_files:
+          - "{{ role_path }}/../helm_charts/istio/istiod/values.custom.yaml"
+
+- name: Install Istio Gateway
+  kubernetes.core.helm:
+    name: istio-ingressgateway
+    chart_ref: istio/gateway
+    release_namespace: "{{ istio_namespace }}"
+    chart_version: "{{ istio_version }}"
+    state: present
+    wait: true
+    values_files:
+          - "{{ role_path }}/../helm_charts/istio/gateway/values.custom.yaml"
+
+- name: Get all namespaces with istio-injection enabled
+  kubernetes.core.k8s_info:
+    kind: Namespace
+    label_selectors:
+      - istio-injection=enabled
+  register: labeled_namespaces
+
+- name: Disable istio sidecar for unauthorized namespaces
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ item.metadata.name }}"
+        labels:
+          istio-injection: disabled # Or set to null to remove the label entirely
+    state: patched
+  loop: "{{ labeled_namespaces.resources }}"
+  when: item.metadata.name not in istio_sidecar_injection_namespaces
+  loop_control:
+    label: "{{ item.metadata.name }}"
+
+- name: Enable istio sidecar for namespaces
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ item }}"
+        labels:
+          istio-injection: enabled
+    state: present
+  loop: "{{ istio_sidecar_injection_namespaces }}"

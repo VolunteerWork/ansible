@@ -59,33 +59,15 @@
 ##########################################
 # NAT GW
 ##########################################
-- name: Check for existing NAT EIP
-  amazon.aws.ec2_eip_info:
-    filters:
-      "tag:Name": "{{ project_name }}-{{ env }}-nat-eip"
-      "tag:Environment": "{{ env }}"
-  register: existing_eips
-
-- name: Allocate Elastic IP
-  amazon.aws.ec2_eip:
-    state: "present"
-    tags:
-      Name: "{{ project_name }}-{{ env }}-nat-eip"
-      Environment: "{{ env }}"
-  register: nat_eip
-  when: existing_eips.addresses | length == 0
-
-
 - name: Create NAT Gateway
   amazon.aws.ec2_vpc_nat_gateway:
     subnet_id: "{{ public_subnet_results.results[0].subnet.id }}"
-    allocation_id: "{{ nat_eip.allocation_id }}"
+    if_exist_do_not_create: true
     state: "present"
     tags:
       Name: "{{ project_name }}-{{ env }}-nat-gw"
       Environment: "{{ env }}"
   register: nat_gw
-  when: nat_eip.skipped is not defined or not nat_eip.skipped
 
 ##########################################
 # Route Tables

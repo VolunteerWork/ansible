@@ -1,0 +1,7 @@
+- name: Install Istio
+  include_tasks: create.yml
+  when: task_state == 'present'
+
+- name: Uninstall Istio
+  include_tasks: destroy.yml
+  when: task_state == 'absent'

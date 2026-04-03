@@ -1,0 +1,16 @@
+- name: Get all namespaces
+  kubernetes.core.k8s_info:
+    kind: Namespace
+  register: all_namespaces
+
+- name: Disable istio sidecar for all namespaces
+  kubernetes.core.k8s:
+    state: patched
+    kind: Namespace
+    name: "{{ item.metadata.name }}"
+    definition:
+      metadata:
+        labels:
+          istio-injection: disabled
+  loop: "{{ all_namespaces.resources }}"
+  when: item.metadata.name not in ['kube-system', 'istio-system', 'kube-public']

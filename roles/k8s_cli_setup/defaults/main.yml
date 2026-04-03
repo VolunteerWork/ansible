@@ -1,0 +1,13 @@
+kubectl_version: "v1.29.0"
+helm_version: "v3.14.0"
+
+region: us-east-1
+eks_cluster_name: "{{ project_name }}-{{ env }}-eks-cluster"
+
+# Istio config
+istio_namespace: istio-system
+istio_repo_url: https://istio-release.storage.googleapis.com/charts
+istio_version: 1.29.1
+istio_sidecar_injection_namespaces:
+  - app
+  - db
